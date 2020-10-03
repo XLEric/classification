@@ -24,19 +24,19 @@ from models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=' Project Classification Test')
-    parser.add_argument('--test_model', type=str, default = './model_exp/2020-04-19_20-14-21/model_epoch-93.pth',
+    parser.add_argument('--test_model', type=str, default = './inf_model/model_epoch-66.pth',
         help = 'test_model') # 模型路径
-    parser.add_argument('--model', type=str, default = 'resnet_101',
+    parser.add_argument('--model', type=str, default = 'resnet_50',
         help = 'model : resnet_18,resnet_34,resnet_50,resnet_101,resnet_152') # 模型类型
-    parser.add_argument('--num_classes', type=int , default = 200,
+    parser.add_argument('--num_classes', type=int , default = 7,
         help = 'num_classes') #  分类类别个数
     parser.add_argument('--GPUS', type=str, default = '0',
         help = 'GPUS') # GPU选择
-    parser.add_argument('--test_path', type=str, default = './example/',
+    parser.add_argument('--test_path', type=str, default = './datasets/PrivateTest/',
         help = 'test_path') # 测试集路径
-    parser.add_argument('--img_size', type=tuple , default = (256,256),
+    parser.add_argument('--img_size', type=tuple , default = (64,64),
         help = 'img_size') # 输入模型图片尺寸
-    parser.add_argument('--fix_res', type=bool , default = True,
+    parser.add_argument('--fix_res', type=bool , default = False,
         help = 'fix_resolution') # 输入模型样本图片是否保证图像分辨率的长宽比
     parser.add_argument('--vis', type=bool , default = True,
         help = 'vis') # 是否可视化图片
@@ -87,53 +87,70 @@ if __name__ == "__main__":
         print('load test model : {}'.format(ops.test_model))
 
     #---------------------------------------------------------------- 预测图片
+    dict_ = {}
     font = cv2.FONT_HERSHEY_SIMPLEX
     with torch.no_grad():
-        for file in os.listdir(ops.test_path):
-            gt_label = file.split('_label_')[-1].strip('.jpg')
-            print('------>>> {} - gt_label : {}'.format(file,gt_label))
+        for idx,doc in enumerate(sorted(os.listdir(ops.test_path), key=lambda x:int(x.split('.')[0]), reverse=False)):
+            if doc not in dict_.keys():
+                dict_[doc] = 0
 
-            img = cv2.imread(ops.test_path + file)
-            # 输入图片预处理
-            if ops.fix_res:
-                img_ = letterbox(img,size_=ops.img_size[0],mean_rgb = (128,128,128))
-            else:
-                img_ = cv2.resize(img, (ops.img_size[1],ops.img_size[0]), interpolation = cv2.INTER_CUBIC)
-            if ops.vis:
-                cv2.namedWindow('image',0)
-                cv2.imshow('image',img_)
-                cv2.waitKey(1)
-            img_ = img_.astype(np.float32)
-            img_ = (img_-128.)/256.
+            gt_label = idx
+            for file in os.listdir(ops.test_path+doc):
 
-            img_ = img_.transpose(2, 0, 1)
-            img_ = torch.from_numpy(img_)
-            img_ = img_.unsqueeze_(0)
+                print('------>>> {} - gt_label : {}'.format(file,gt_label))
 
-            if use_cuda:
-                img_ = img_.cuda()  # (bs, 3, h, w)
+                img = cv2.imread(ops.test_path +doc+'/'+ file)
+                # 输入图片预处理
+                if ops.fix_res:
+                    img_ = letterbox(img,size_=ops.img_size[0],mean_rgb = (128,128,128))
+                else:
+                    img_ = cv2.resize(img, (ops.img_size[1],ops.img_size[0]), interpolation = cv2.INTER_CUBIC)
+                if ops.vis:
+                    cv2.namedWindow('image',0)
+                    cv2.imshow('image',img_)
+                    cv2.waitKey(1)
+                img_ = img_.astype(np.float32)
+                img_ = (img_-128.)/256.
 
-            pre_ = model_(img_.float())
+                img_ = img_.transpose(2, 0, 1)
+                img_ = torch.from_numpy(img_)
+                img_ = img_.unsqueeze_(0)
 
-            outputs = F.softmax(pre_,dim = 1)
-            outputs = outputs[0]
+                if use_cuda:
+                    img_ = img_.cuda()  # (bs, 3, h, w)
 
-            output = outputs.cpu().detach().numpy()
-            output = np.array(output)
+                pre_ = model_(img_.float())
 
-            max_index = np.argmax(output)
+                outputs = F.softmax(pre_,dim = 1)
+                outputs = outputs[0]
 
-            score_ = output[max_index]
+                output = outputs.cpu().detach().numpy()
+                output = np.array(output)
 
-            print('gt {} -- pre {} : {}'.format(gt_label,max_index,score_))
-            show_str = 'gt {} - pre {} :{:.2f}'.format(gt_label,max_index,score_)
-            cv2.putText(img,show_str,(3,img.shape[0]-10),font,0.45,(15,125,255),3)
-            cv2.putText(img,show_str,(3,img.shape[0]-10),font,0.45,(225,155,55),1)
+                max_index = np.argmax(output)
 
-            cv2.namedWindow('image',0)
-            cv2.imshow('image',img)
-            cv2.waitKey(0)
+                score_ = output[max_index]
+
+                print('gt {} -- pre {}     --->>>    confidence {}'.format(gt_label,max_index,score_))
+
+                if gt_label == max_index:
+                    dict_[doc] += 1
+                # show_str = 'gt {} - pre {} :{:.2f}'.format(gt_label,max_index,score_)
+                # cv2.putText(img,show_str,(3,img.shape[0]-10),font,0.45,(15,125,255),3)
+                # cv2.putText(img,show_str,(3,img.shape[0]-10),font,0.45,(225,155,55),1)
+
+                # cv2.namedWindow('image',0)
+                # cv2.imshow('image',img)
+                # cv2.waitKey(1)
 
     cv2.destroyAllWindows()
+    print('\n-----------------------------------------------\n')
+    for idx,doc in enumerate(sorted(os.listdir(ops.test_path), key=lambda x:int(x.split('.')[0]), reverse=False)):
+        fm = len(os.listdir(ops.test_path+doc))
+        fz = dict_[doc]
+        try:
+            print('{}: {}/{} : {}'.format(doc,fz,fm,fz/fm))
+        except:
+            print('error')
 
-    print('well done ')
+    print('\nwell done ')
