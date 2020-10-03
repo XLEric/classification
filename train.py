@@ -257,7 +257,7 @@ def trainer(ops,f_log):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=' Project Classification Train')
-    parser.add_argument('--seed', type=int, default = 999,
+    parser.add_argument('--seed', type=int, default = 123,
         help = 'seed') # 设置随机种子
     parser.add_argument('--model_exp', type=str, default = './model_exp',
         help = 'model_exp') # 模型输出文件夹
@@ -269,7 +269,7 @@ if __name__ == "__main__":
         help = 'GPUS') # GPU选择
     parser.add_argument('--train_path', type=str, default = './datasets/train_datasets/',
         help = 'train_path') # 训练集路径
-    parser.add_argument('--val_factor', type=float, default = 0.1,
+    parser.add_argument('--val_factor', type=float, default = 0.0,
         help = 'val_factor') # 从训练集中分离验证集对应的比例
     parser.add_argument('--test_interval', type=int, default = 1,
         help = 'test_interval') # 训练集和测试集 计算 loss 间隔
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         help = 'img_size') # 输入模型图片尺寸
     parser.add_argument('--flag_agu', type=bool , default = True,
         help = 'data_augmentation') # 训练数据生成器是否进行数据扩增
-    parser.add_argument('--fix_res', type=bool , default = True,
+    parser.add_argument('--fix_res', type=bool , default = False,
         help = 'fix_resolution') # 输入模型样本图片是否保证图像分辨率的长宽比
     parser.add_argument('--clear_model_exp', type=bool, default = False,
         help = 'clear_model_exp') # 模型输出文件夹是否进行清除
