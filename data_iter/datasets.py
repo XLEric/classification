@@ -50,7 +50,7 @@ def contrast_img(img, c, b):  # 亮度就是每个像素所有通道都加上b
     return dst
 
 def img_agu_crop(img_):
-    scale_ = int(min(img_.shape[0],img_.shape[1])/5)
+    scale_ = int(min(img_.shape[0],img_.shape[1])/8)
     x1 = max(0,random.randint(0,scale_))
     y1 = max(0,random.randint(0,scale_))
     x2 = min(img_.shape[1]-1,img_.shape[1] - random.randint(0,scale_))
