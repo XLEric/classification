@@ -48,6 +48,16 @@ def contrast_img(img, c, b):  # 亮度就是每个像素所有通道都加上b
     blank = np.zeros([rows, cols, channels], img.dtype)
     dst = cv2.addWeighted(img, c, blank, 1-c, b)
     return dst
+
+def img_agu_crop(img_):
+    scale_ = int(min(img_.shape[0],img_.shape[1])/5)
+    x1 = max(0,random.randint(0,scale_))
+    y1 = max(0,random.randint(0,scale_))
+    x2 = min(img_.shape[1]-1,img_.shape[1] - random.randint(0,scale_))
+    y2 = min(img_.shape[0]-1,img_.shape[1] - random.randint(0,scale_))
+#     print(img_.shape,'-crop- : ',x1,y1,x2,y2)
+    img_crop_ = img_[y1:y2,x1:x2,:]
+    return img_crop_
 # 图像旋转
 def M_rotate_image(image , angle , cx , cy):
     '''
@@ -101,11 +111,13 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
 
         img = cv2.imread(img_path)  # BGR
         # print('--------->>>img shape',img.shape)
-
+        
+        if self.flag_agu == True and random.random()>0.5:
+            img = img_agu_crop(img)
 
         cv_resize_model = [cv2.INTER_LINEAR,cv2.INTER_CUBIC,cv2.INTER_NEAREST,cv2.INTER_AREA]
 
-        if self.flag_agu == True:
+        if self.flag_agu == True and random.random()>0.6:
             if random.randint(0,5)==0:
                 cx = int(img.shape[1]/2)
                 cy = int(img.shape[0]/2)
@@ -114,6 +126,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 offset_y = random.randint(-5,5)
                 if not(angle==0 and offset_x==0 and offset_y==0):
                     img,_  = M_rotate_image(img , angle , cx+offset_x , cy+offset_y)
+        
 
         if self.flag_agu == True and random.random()>0.9:
             resize_idx = random.randint(0,3)
@@ -140,13 +153,13 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         if self.flag_agu == True:
             if random.random()>0.9:# and (label_ == 15 or label_ == 16 or label_ == 17):
                 # print('agu hue ')
-                img_hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+                img_hsv=cv2.cvtColor(img_,cv2.COLOR_BGR2HSV)
                 hue_x = random.randint(-10,10)
                 # print(cc)
                 img_hsv[:,:,0]=(img_hsv[:,:,0]+hue_x)
                 img_hsv[:,:,0] =np.maximum(img_hsv[:,:,0],0)
                 img_hsv[:,:,0] =np.minimum(img_hsv[:,:,0],180)#范围 0 ~180
-                img=cv2.cvtColor(img_hsv,cv2.COLOR_HSV2BGR)
+                img_=cv2.cvtColor(img_hsv,cv2.COLOR_HSV2BGR)
 
         # cv2.namedWindow('img',0)
         # cv2.imshow('img',img)
