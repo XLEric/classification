@@ -24,7 +24,7 @@ from models.resnet import resnet18, resnet34, resnet50, resnet101, resnet152
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=' Project Classification Test')
-    parser.add_argument('--test_model', type=str, default = './inf_model/model_epoch-66.pth',
+    parser.add_argument('--test_model', type=str, default = './inf_model/model_epoch-15.pth',
         help = 'test_model') # 模型路径
     parser.add_argument('--model', type=str, default = 'resnet_50',
         help = 'model : resnet_18,resnet_34,resnet_50,resnet_101,resnet_152') # 模型类型
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         help = 'num_classes') #  分类类别个数
     parser.add_argument('--GPUS', type=str, default = '0',
         help = 'GPUS') # GPU选择
-    parser.add_argument('--test_path', type=str, default = './datasets/PrivateTest/',
+    parser.add_argument('--test_path', type=str, default = './datasets/datasets_expression/PrivateTest/',
         help = 'test_path') # 测试集路径
     parser.add_argument('--img_size', type=tuple , default = (64,64),
         help = 'img_size') # 输入模型图片尺寸
